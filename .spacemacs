@@ -29,9 +29,12 @@ values."
    ;; Paths must have a trailing slash (i.e. `~/.mycontribs/')
    dotspacemacs-configuration-layer-path '()
    ;; List of configuration layers to load.
-   
-   dotspacemacs-configuration-layers   '(
-                                         markdown
+   dotspacemacs-configuration-layers
+   '(
+     html
+     python
+
+     haskell
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
@@ -42,25 +45,30 @@ values."
      emacs-lisp
      c-c++
      auto-completion
-     gtags
      git
-     semantic
-     
-     ;; markdown
-     ;; org
+     markdown
+     org
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
      spell-checking
      syntax-checking
-     
      version-control
      )
+
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages '(
+                                      company
+                                      company-irony
+                                      company-irony-c-headers
+                                      irony
+                                      irony-eldoc
+                                      rtags
+                                      linum-relative
+                                      )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -296,7 +304,7 @@ executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
-  
+
   )
 
 (defun dotspacemacs/user-config ()
@@ -306,30 +314,92 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  (global-set-key "\356" (quote next-match))
-  (global-set-key "\360" (quote previous-error)) 
-  )
+  (global-set-key [134217838] (quote next-match))
+  (global-set-key [134217840] (quote previous-error))
+  (load-file "~/projects/emacs_stuff/rtags/rtags/build/src/rtags.el")
+  (global-flycheck-mode)
+  (defun setup-flycheck-rtags ()
+    (interactive)
+    (flycheck-select-checker 'rtags)
+    ;; RTags creates more accurate overlays.
+    (setq-local flycheck-highlighting-mode nil)
+    (setq-local flycheck-check-syntax-automatically nil))
+  (defun use-rtags (&optional useFileManager)
+    (and (rtags-executable-find "rc")
+         (cond ((not (gtags-get-rootpath)) t)
+               ((and (not (eq major-mode 'c++-mode))
+                     (not (eq major-mode 'c-mode))) (rtags-has-filemanager))
+               (useFileManager (rtags-has-filemanager))
+               (t (rtags-is-indexed)))))
+  (defun tags-find-symbol-at-point (&optional prefix)
+    (interactive "P")
+    (if (and (not (rtags-find-symbol-at-point prefix)) rtags-last-request-not-indexed)
+        (gtags-find-tag)))
+  (defun tags-find-references-at-point (&optional prefix)
+    (interactive "P")
+    (if (and (not (rtags-find-references-at-point prefix)) rtags-last-request-not-indexed)
+        (gtags-find-rtag)))
+  (defun tags-find-symbol ()
+    (interactive)
+    (call-interactively (if (use-rtags) 'rtags-find-symbol 'gtags-find-symbol)))
+  (defun tags-find-references ()
+    (interactive)
+    (call-interactively (if (use-rtags) 'rtags-find-references 'gtags-find-rtag)))
+  (defun tags-find-file ()
+    (interactive)
+    (call-interactively (if (use-rtags t) 'rtags-find-file 'gtags-find-file)))
+  (defun tags-imenu ()
+    (interactive)
+    (call-interactively (if (use-rtags t) 'rtags-imenu 'idomenu)))
+  (define-key c-mode-base-map (kbd "M-.") (function tags-find-symbol-at-point))
+  (define-key c-mode-base-map (kbd "M-,") (function tags-find-references-at-point))
+  ;;(define-key c-mode-base-map (kbd "M-;") (function tags-find-file))
+  (define-key c-mode-base-map (kbd "C-.") (function tags-find-symbol))
+  (define-key c-mode-base-map (kbd "C-,") (function tags-find-references))
+  (define-key c-mode-base-map (kbd "C-<") (function rtags-find-virtuals-at-point))
+  (define-key c-mode-base-map (kbd "M-i") (function tags-imenu))
+  (define-key c-mode-base-map (kbd "M-*") (function rtags-location-stack-back))
+  (setq rtags-autostart-diagnostics t)
+  (rtags-diagnostics)
+  (setq rtags-completions-enabled t)
+  
+  
+  (add-hook 'c++-mode-hook 'irony-mode)
+  (add-hook 'c-mode-hook 'irony-mode)
+  (add-hook 'objc-mode-hook 'irony-mode)
+  ;; replace the `completion-at-point' and `complete-symbol' bindings in
+  ;; irony-mode's buffers by irony-mode's function
+  (eval-after-load 'company
+    '(add-to-list 'company-backends 'company-irony))
+  
+  (defun my-irony-mode-hook ()
+    (define-key irony-mode-map [remap completion-at-point]
+      'company-irony)
+    (define-key irony-mode-map [remap complete-symbol]
+      'company-irony))
+  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
 
+  (setq c-default-style "linux")
+  (setq c-basic-offset 4)
+  (setq undo-tree-mode nil)
+  (global-linum-mode)
+  (linum-relative-mode)
+  (setq org-default-notes-file "~/notes.org")
+
+)
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
-
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-backends (quote (company-clang)))
- '(custom-safe-themes
-   (quote
-    ("fa2b58bb98b62c3b8cf3b6f02f058ef7827a8e497125de0254f56e373abee088" default)))
- '(package-selected-packages
-   (quote
-    (mmm-mode markdown-toc markdown-mode gh-md orgit spinner powerline hydra parent-mode projectile pkg-info epl flx smartparens iedit anzu evil goto-chg undo-tree highlight f s diminish bind-map bind-key packed dash helm avy helm-core async popup package-build stickyfunc-enhance srefactor git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter diff-hl rtags evil-visualstar flycheck-irony company-irony-c-headers company-irony xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help smeargle org helm-gitignore gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-commit with-editor sr-speedbar mwim helm-company helm-c-yasnippet flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck company-statistics company-c-headers company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ggtags helm-gtags disaster cmake-mode clang-format ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spacemacs-theme spaceline restart-emacs request rainbow-delimiters quelpa popwin persp-mode pcre2el paradox org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide ido-vertical-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu elisp-slime-nav dumb-jump define-word column-enforce-mode clean-aindent-mode auto-highlight-symbol auto-compile aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line))))
+ '(company-backends (quote ((company-irony-c-headers company-irony))))
+ '(org-capture-templates nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
