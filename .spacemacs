@@ -6,6 +6,7 @@
   "Configuration Layers declaration.
 You should not put any user code in this function besides modifying the variable
 values."
+
   (setq-default
    ;; Base distribution to use. This is a layer contained in the directory
    ;; `+distribution'. For now available distributions are `spacemacs-base'
@@ -31,9 +32,9 @@ values."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(
+     javascript
      html
      python
-
      haskell
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
@@ -41,19 +42,22 @@ values."
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      helm
+     semantic
+     ;;ivy
      better-defaults
      emacs-lisp
      c-c++
      auto-completion
      git
      markdown
+
      org
      (shell :variables
             shell-default-height 30
             shell-default-position 'bottom)
      spell-checking
      syntax-checking
-     version-control
+     ;;version-control
      )
 
    ;; List of additional packages that will be installed without being
@@ -61,13 +65,15 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages '(
+                                      sr-speedbar
                                       company
                                       company-irony
-                                      company-irony-c-headers
+                                      ;;company-irony-c-headers
                                       irony
-                                      irony-eldoc
+                                      ;;irony-eldoc
                                       rtags
                                       linum-relative
+                                      ;;helm-gtags
                                       )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -245,11 +251,11 @@ values."
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'. (default 90)
-   dotspacemacs-active-transparency 90
+   dotspacemacs-active-transparency 95
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's inactive or deselected.
    ;; Transparency can be toggled through `toggle-transparency'. (default 90)
-   dotspacemacs-inactive-transparency 90
+   dotspacemacs-inactive-transparency 95
    ;; If non nil show the titles of transient states. (default t)
    dotspacemacs-show-transient-state-title t
    ;; If non nil show the color guide hint for transient state keys. (default t)
@@ -303,7 +309,8 @@ It is called immediately after `dotspacemacs/init', before layer configuration
 executes.
  This function is mostly useful for variables that need to be set
 before packages are loaded. If you are unsure, you should try in setting them in
-`dotspacemacs/user-config' first."
+`dotspacemacs/user-confi
+g' first."
 
   )
 
@@ -314,6 +321,7 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
+  (global-company-mode)
   (global-set-key [134217838] (quote next-match))
   (global-set-key [134217840] (quote previous-error))
   (load-file "~/projects/emacs_stuff/rtags/rtags/build/src/rtags.el")
@@ -334,7 +342,7 @@ you should place your code here."
   (defun tags-find-symbol-at-point (&optional prefix)
     (interactive "P")
     (if (and (not (rtags-find-symbol-at-point prefix)) rtags-last-request-not-indexed)
-        (gtags-find-tag)))
+        (helm-gtags-find-symbol)))
   (defun tags-find-references-at-point (&optional prefix)
     (interactive "P")
     (if (and (not (rtags-find-references-at-point prefix)) rtags-last-request-not-indexed)
@@ -362,8 +370,7 @@ you should place your code here."
   (setq rtags-autostart-diagnostics t)
   (rtags-diagnostics)
   (setq rtags-completions-enabled t)
-  
-  
+
   (add-hook 'c++-mode-hook 'irony-mode)
   (add-hook 'c-mode-hook 'irony-mode)
   (add-hook 'objc-mode-hook 'irony-mode)
@@ -371,7 +378,7 @@ you should place your code here."
   ;; irony-mode's buffers by irony-mode's function
   (eval-after-load 'company
     '(add-to-list 'company-backends 'company-irony))
-  
+
   (defun my-irony-mode-hook ()
     (define-key irony-mode-map [remap completion-at-point]
       'company-irony)
@@ -383,10 +390,16 @@ you should place your code here."
   (setq c-default-style "linux")
   (setq c-basic-offset 4)
   (setq undo-tree-mode nil)
+
   (global-linum-mode)
   (linum-relative-mode)
   (setq org-default-notes-file "~/notes.org")
+  (spacemacs/toggle-transparency)
+  (setq clang-format-style "{BasedOnStyle: google, IndentWidth: 4, ColumnLimit: 140}")
 
+  (setq compilation-scroll-output t)
+  (setq compilation-window-height 15)
+  (setq company-backends (quote ((company-irony-c-headers company-irony))))
 )
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -395,8 +408,20 @@ you should place your code here."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-backends (quote ((company-irony-c-headers company-irony))))
- '(org-capture-templates nil))
+ '(c-basic-offset 4)
+ '(company-backends (quote ((company-irony))))
+ '(compilation-scroll-output t)
+ '(exec-path-from-shell-check-startup-files nil)
+ '(irony-cdb-compilation-databases (quote (irony-cdb-json)))
+ '(irony-cdb-search-directory-list (quote ("build")))
+ '(org-capture-templates nil)
+ '(semantic-default-submodes
+   (quote
+    (global-semantic-highlight-func-mode global-semantic-stickyfunc-mode global-semantic-idle-summary-mode global-semantic-idle-local-symbol-highlight-mode)))
+ '(sr-speedbar-right-side nil)
+ '(tramp-mode nil)
+ '(tramp-use-ssh-controlmaster-options nil)
+)
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
