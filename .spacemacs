@@ -32,6 +32,8 @@ values."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(
+     yaml
+     php
      windows-scripts
      html
      csv
@@ -50,7 +52,12 @@ values."
      ;; ivy
      ;; better-defaults
      emacs-lisp
-     c-c++
+     c-c++;; :
+
+     ;; :variables
+     ;; c-c++-enable-clang-support t
+     ;; mineo-rtags
+     ;; c++-rtags
      ;;auto-completion
      git
      markdown
@@ -69,10 +76,12 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages '(
+                                      cmake-ide
                                       sr-speedbar
                                       company
                                       company-irony
-                                      ;;company-irony-c-headers
+                                      company-irony-c-headers
+                                      clang-format
                                       irony
                                       ;;irony-eldoc
                                       rtags
@@ -330,6 +339,7 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
+
   (spacemacs/toggle-transparency)
   (global-set-key [134217838] (quote next-match))
   (global-set-key [134217840] (quote previous-error))
@@ -341,8 +351,8 @@ you should place your code here."
     )
   ;; add to hook
   (add-hook 'org-mode-hook 'my-org-mode-config)
-  ;; (load-file "~/projects/emacs_stuff/rtags/src/rtags.el")
-  ;; (global-company-mode)
+  (load-file "~/projects/emacs_stuff/rtags/src/rtags.el")
+  (global-company-mode)
   ;; (global-flycheck-mode)
   ;; (defun setup-flycheck-rtags ()
   ;;   (interactive)
@@ -389,21 +399,21 @@ you should place your code here."
   ;; (rtags-diagnostics)
   ;; (setq rtags-completions-enabled t)
 
-  ;; (add-hook 'c++-mode-hook 'irony-mode)
-  ;; (add-hook 'c-mode-hook 'irony-mode)
-  ;; (add-hook 'objc-mode-hook 'irony-mode)
+  (add-hook 'c++-mode-hook 'irony-mode)
+  (add-hook 'c-mode-hook 'irony-mode)
+  (add-hook 'objc-mode-hook 'irony-mode)
   ;; ;; replace the `completion-at-point' and `complete-symbol' bindings in
   ;; ;; irony-mode's buffers by irony-mode's function
-  ;; (eval-after-load 'company
-  ;;   '(add-to-list 'company-backends 'company-irony))
+  (eval-after-load 'company
+    '(add-to-list 'company-backends 'company-irony))
 
-  ;; (defun my-irony-mode-hook ()
-  ;;   (define-key irony-mode-map [remap completion-at-point]
-  ;;     'company-irony)
-  ;;   (define-key irony-mode-map [remap complete-symbol]
-  ;;     'company-irony))
-  ;; (add-hook 'irony-mode-hook 'my-irony-mode-hook)
-  ;; (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+  (defun my-irony-mode-hook ()
+    (define-key irony-mode-map [remap completion-at-point]
+      'company-irony)
+    (define-key irony-mode-map [remap complete-symbol]
+      'company-irony))
+  (add-hook 'irony-mode-hook 'my-irony-mode-hook)
+  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
 
   (setq c-default-style "linux")
   (setq c-basic-offset 4)
@@ -417,7 +427,7 @@ you should place your code here."
 
   (setq compilation-scroll-output t)
   (setq compilation-window-height 15)
-  ;; (setq company-backends (quote ((company-irony-c-headers company-irony))))
+  (setq company-backends (quote ((company-irony-c-headers company-irony))))
 )
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -428,14 +438,12 @@ you should place your code here."
  ;; If there is more than one, they won't work right.
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
- '(ansi-color-names-vector
-   ["black" "red3" "ForestGreen" "yellow3" "blue" "magenta3" "DeepSkyBlue" "gray50"])
  '(c-basic-offset 4)
  '(company-backends (quote ((company-irony))))
  '(compilation-scroll-output t)
  '(custom-safe-themes
    (quote
-    ("38e64ea9b3a5e512ae9547063ee491c20bd717fe59d9c12219a0b1050b439cdd" "bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" "191a0b83e410ff9f7be7dbb158a0bb8fce32211167919a6ab5f414a906df4d7d" default)))
+    ("59e82a683db7129c0142b4b5a35dbbeaf8e01a4b81588f8c163bd255b76f4d21" "621595cbf6c622556432e881945dda779528e48bb57107b65d428e61a8bb7955" "713f898dd8c881c139b62cf05b7ac476d05735825d49006255c0a31f9a4f46ab" "801a567c87755fe65d0484cb2bded31a4c5bb24fd1fe0ed11e6c02254017acb2" "dbade2e946597b9cda3e61978b5fcc14fa3afa2d3c4391d477bdaeff8f5638c5" "450f3382907de50be905ae8a242ecede05ea9b858a8ed3cc8d1fbdf2d57090af" "1dd7b369ab51f00e91b6a990634017916e7bdeb64002b4dda0d7a618785725ac" "4e63466756c7dbd78b49ce86f5f0954b92bf70b30c01c494b37c586639fa3f6f" "3d5ef3d7ed58c9ad321f05360ad8a6b24585b9c49abcee67bdcbb0fe583a6950" "b85fc9f122202c71b9884c5aff428eb81b99d25d619ee6fde7f3016e08515f07" "72c7c8b431179cbcfcea4193234be6a0e6916d04c44405fc87905ae16bed422a" "444238426b59b360fb74f46b521933f126778777c68c67841c31e0a68b0cc920" "086970da368bb95e42fd4ddac3149e84ce5f165e90dfc6ce6baceae30cf581ef" "0e0c37ee89f0213ce31205e9ae8bce1f93c9bcd81b1bcda0233061bb02c357a8" "f64c9f8b4241b680b186f4620afb9c82fa2a76cf4498a7431f90db59bb1892eb" "5e2dc1360a92bb73dafa11c46ba0f30fa5f49df887a8ede4e3533c3ab6270e08" "c1390663960169cd92f58aad44ba3253227d8f715c026438303c09b9fb66cdfb" "51e228ffd6c4fff9b5168b31d5927c27734e82ec61f414970fc6bcce23bc140d" "19ba41b6dc0b5dd34e1b8628ad7ae47deb19f968fe8c31853d64ea8c4df252b8" "868f73b5cf78e72ca2402e1d48675e49cc9a9619c5544af7bf216515d22b58e7" "9deeab438d1d798c26d41c759d74a2406802427ff6acb7dec8cec961bcb4e7d5" "a25c42c5e2a6a7a3b0331cad124c83406a71bc7e099b60c31dc28a1ff84e8c04" "55ed02951e7b458e4cd18837eefa1956884c9afd22bb514f697fd1d2d1abb3d3" "e11569fd7e31321a33358ee4b232c2d3cf05caccd90f896e1df6cab228191109" "38e64ea9b3a5e512ae9547063ee491c20bd717fe59d9c12219a0b1050b439cdd" "bffa9739ce0752a37d9b1eee78fc00ba159748f50dc328af4be661484848e476" "191a0b83e410ff9f7be7dbb158a0bb8fce32211167919a6ab5f414a906df4d7d" default)))
  '(evil-want-Y-yank-to-eol nil)
  '(exec-path-from-shell-check-startup-files nil)
  '(irony-cdb-compilation-databases (quote (irony-cdb-json)))
@@ -450,11 +458,11 @@ you should place your code here."
       "* TODO %? 
  %U 
  %a"))))
+ '(package-selected-packages
+   (quote
+    (powerline org-category-capture alert log4e gntp org-plus-contrib markdown-mode magit-popup skewer-mode simple-httpd json-snatcher json-reformat multiple-cursors js2-mode hydra lv dash-functional parent-mode projectile request haml-mode gitignore-mode flyspell-correct pos-tip flycheck flx grizzl highlight magit transient git-commit with-editor smartparens iedit anzu evil goto-chg autothemer irony ghc haskell-mode company levenshtein bind-map bind-key packed pythonic helm avy helm-core popup async yasnippet php-mode pkg-info epl f dash s yaml-mode zenburn-theme zen-and-art-theme yapfify xterm-color ws-butler winum white-sand-theme which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package underwater-theme ujelly-theme twilight-theme twilight-bright-theme twilight-anti-bright-theme toxi-theme toc-org tao-theme tangotango-theme tango-plus-theme tango-2-theme tagedit sunny-day-theme sublime-themes subatomic256-theme subatomic-theme sr-speedbar spaceline spacegray-theme soothe-theme solarized-theme soft-stone-theme soft-morning-theme soft-charcoal-theme smyx-theme smeargle slim-mode shell-pop seti-theme scss-mode sass-mode rtags reverse-theme restart-emacs rebecca-theme rainbow-delimiters railscasts-theme pyvenv pytest pyenv-mode py-isort purple-haze-theme pug-mode professional-theme powershell popwin planet-theme pip-requirements phpunit phpcbf php-extras php-auto-yasnippets phoenix-dark-pink-theme phoenix-dark-mono-theme persp-mode pcre2el paradox orgit organic-green-theme org-projectile org-present org-pomodoro org-mime org-download org-bullets open-junk-file omtose-phellack-theme oldlace-theme occidental-theme obsidian-theme noctilux-theme neotree naquadah-theme mustang-theme multi-term move-text monokai-theme monochrome-theme molokai-theme moe-theme mmm-mode minimal-theme material-theme markdown-toc majapahit-theme magit-gitflow madhat2r-theme macrostep lush-theme lorem-ipsum livid-mode live-py-mode linum-relative link-hint light-soap-theme less-css-mode json-mode js2-refactor js-doc jbeans-theme jazz-theme ir-black-theme intero inkpot-theme indent-guide hy-mode hungry-delete htmlize hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation heroku-theme hemisu-theme helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-hoogle helm-gitignore helm-flx helm-descbinds helm-css-scss helm-ag hc-zenburn-theme haskell-snippets gruvbox-theme gruber-darker-theme grandshell-theme gotham-theme google-translate golden-ratio gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter gh-md gandalf-theme flyspell-correct-helm flycheck-pos-tip flycheck-haskell flx-ido flatui-theme flatland-theme fiplr farmhouse-theme fancy-battery eyebrowse expand-region exotica-theme exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-ediff evil-args evil-anzu eval-sexp-fu espresso-theme eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav dumb-jump drupal-mode dracula-theme django-theme disaster diminish define-word darktooth-theme darkokai-theme darkmine-theme darkburn-theme dakrone-theme cython-mode cyberpunk-theme csv-mode company-irony-c-headers company-irony company-ghci company-ghc column-enforce-mode color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized coffee-mode cmm-mode cmake-mode cmake-ide clues-theme clean-aindent-mode clang-format cherry-blossom-theme busybee-theme bubbleberry-theme birds-of-paradise-plus-theme badwolf-theme auto-highlight-symbol auto-dictionary auto-compile apropospriate-theme anti-zenburn-theme anaconda-mode ample-zen-theme ample-theme alect-themes aggressive-indent afternoon-theme adaptive-wrap ace-window ace-link ace-jump-helm-line)))
  '(semantic-default-submodes nil)
- '(semantic-mode nil)
- '(sr-speedbar-right-side nil)
- '(tramp-mode nil)
- '(tramp-use-ssh-controlmaster-options nil))
+ '(semantic-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
